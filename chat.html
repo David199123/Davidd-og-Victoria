@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>David and Victoria's Private Chat</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #fbeaea;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        header {
+            background-color: #ffcccc;
+            color: #7d0000;
+            text-align: center;
+            padding: 1em 0;
+        }
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 1em;
+            overflow-y: auto;
+        }
+        .chat-container div {
+            margin: 0.5em 0;
+            padding: 0.5em;
+            border-radius: 5px;
+            background-color: #fff;
+            border: 1px solid #ffcccc;
+        }
+        .chat-input {
+            display: flex;
+            border-top: 1px solid #ffcccc;
+        }
+        .chat-input input {
+            flex: 1;
+            padding: 1em;
+            border: none;
+            outline: none;
+        }
+        .chat-input button {
+            padding: 1em;
+            border: none;
+            background-color: #ff6666;
+            color: #fff;
+            cursor: pointer;
+        }
+    </style>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-firestore.js"></script>
+    <script>
+        // Your Firebase configuration
+        var firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_AUTH_DOMAIN",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_STORAGE_BUCKET",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        var db = firebase.firestore();
+
+        function sendMessage() {
+            var messageInput = document.getElementById('message-input');
+            if (messageInput.value.trim() !== "") {
+                db.collection("messages").add({
+                    text: messageInput.value,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                messageInput.value = '';
+            }
+        }
+
+        function displayMessage(doc) {
+            var chatContainer = document.getElementById('chat-container');
+            var messageDiv = document.createElement('div');
+            messageDiv.textContent = doc.data().text;
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        db.collection("messages").orderBy("timestamp")
+        .onSnapshot(function(snapshot) {
+            snapshot.docChanges().forEach(function(change) {
+                if (change.type === "added") {
+                    displayMessage(change.doc);
+                }
+            });
+        });
+    </script>
+</head>
+<body>
+    <header>
+        <h1>David and Victoria's Private Chat</h1>
+    </header>
+    <div class="chat-container" id="chat-container"></div>
+    <div class="chat-input">
+        <input type="text" id="message-input" placeholder="Type your message...">
+        <button onclick="sendMessage()">Send</button>
+    </div>
+</body>
+</html>
